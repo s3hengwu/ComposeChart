@@ -397,7 +397,7 @@ fun CombinedChart(
 
             // 绘制X轴
             XAxisView(
-                config = xAxisConfig,
+                config = xAxisConfig.copy(centerLabels = true),
                 bounds = b,
                 xRangeMin = data.getX最小值(),
                 xRangeMax = data.getX最大值(),

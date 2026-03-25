@@ -65,7 +65,10 @@ data class XAxisConfig(
 
     val valueFormatter: ((Float) -> String)? = null,
     val labelFontWeight: FontWeight = FontWeight.Normal,
-    val labelFontStyle: FontStyle = FontStyle.Normal
+    val labelFontStyle: FontStyle = FontStyle.Normal,
+
+    // 是否将标签居中显示在分组中（用于柱状图等离散数据）
+    val centerLabels: Boolean = false
 )
 
 /**

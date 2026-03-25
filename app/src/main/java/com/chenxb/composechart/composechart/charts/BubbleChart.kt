@@ -116,13 +116,18 @@ fun BubbleChart(
                 emptyList()
             } else {
                 val result = mutableListOf<CachedBubbleInfo>()
-                val xRange = if (dataRange.xMax != dataRange.xMin) dataRange.xMax - dataRange.xMin else 1f
                 val yRange = if (dataRange.yMax != dataRange.yMin) dataRange.yMax - dataRange.yMin else 1f
                 val maxSize = style.maxSize
 
+                // 使用分组模式计算，与 centerLabels 一致
+                val groupCount = (dataRange.xMax - dataRange.xMin + 1).toInt()
+                val groupWidth = chartBounds.width / groupCount
+
                 for (dataSet in data.getDataSets()) {
                     for (entry in dataSet.getEntries()) {
-                        val x = chartBounds.left + ((entry.x - dataRange.xMin) / xRange) * chartBounds.width
+                        // 分组模式：x 坐标居中在组内
+                        val groupIndex = entry.x.toInt() - dataRange.xMin.toInt()
+                        val x = chartBounds.left + groupIndex * groupWidth + groupWidth / 2
                         val y = chartBounds.bottom - ((entry.y - dataRange.yMin) / yRange) * chartBounds.height * animationProgress
 
                         val normalizedSize = if (style.normalizeSize && maxSize > 0) {
@@ -258,7 +263,7 @@ fun BubbleChart(
 
             // 绘制X轴
             XAxisView(
-                config = xAxisConfig,
+                config = xAxisConfig.copy(centerLabels = true),
                 bounds = b,
                 xRangeMin = data.getX最小值(),
                 xRangeMax = data.getX最大值(),

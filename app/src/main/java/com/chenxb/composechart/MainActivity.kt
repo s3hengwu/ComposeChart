@@ -208,7 +208,10 @@ private fun LineChartExample() {
     LineChart(
         data = chartData,
         modifier = Modifier.fillMaxSize(),
-        xAxisConfig = XAxisConfig(),
+        xAxisConfig = XAxisConfig(
+            labelCount = 10,
+            granularity = 1f
+        ),
         yAxisConfig = YAxisConfig(
             limitLines = limitLines
         )

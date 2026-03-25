@@ -50,57 +50,60 @@ fun XAxisView(
             )
         }
 
-        // 计算标签数量和步长（考虑粒度）
+        // 计算标签数量和步长
         val range = xRangeMax - xRangeMin
-        var labelCount = config.labelCount
-        var step = range / (labelCount - 1)
 
-        // 确保步长不小于粒度
-        if (step < config.granularity && config.granularity > 0) {
-            step = config.granularity
-            labelCount = (range / step).toInt() + 1
-        }
+        if (config.centerLabels) {
+            // 分组模式：标签居中显示在每组中心
+            val groupCount = (xRangeMax - xRangeMin + 1).toInt()
+            val groupWidth = chartWidth / groupCount
 
-        // 绘制网格线
-        if (config.isDrawGridLinesEnabled && config.gridStyle.isDrawGridLinesEnabled) {
-            for (i in 0 until labelCount) {
-                val value = xRangeMin + step * i
-                if (value > xRangeMax) break
-                val x = bounds.left + (value - xRangeMin) / range * chartWidth
-
-                drawLine(
-                    color = config.gridStyle.gridColor,
-                    start = Offset(x, bounds.top),
-                    end = Offset(x, y),
-                    strokeWidth = config.gridStyle.gridLineWidth,
-                    pathEffect = config.gridStyle.gridLineDashPathEffect
-                )
-            }
-        }
-
-        // 绘制标签（支持旋转）
-        if (config.isDrawLabelsEnabled) {
-            for (i in 0 until labelCount) {
-                val value = xRangeMin + step * i
-                if (value > xRangeMax) break
-                val x = bounds.left + (value - xRangeMin) / range * chartWidth
-
-                val labelText = config.valueFormatter?.invoke(value) ?: value.toInt().toString()
-
-                val textLayoutResult = textMeasurer.measure(
-                    text = labelText,
-                    style = TextStyle(
-                        fontSize = config.labelTextSize.sp,
-                        color = config.labelTextColor,
-                        fontFamily = config.labelFontFamily,
-                        fontWeight = config.labelFontWeight,
-                        fontStyle = config.labelFontStyle
+            // 绘制网格线
+            if (config.isDrawGridLinesEnabled && config.gridStyle.isDrawGridLinesEnabled) {
+                for (i in 0..groupCount) {
+                    val x = bounds.left + i * groupWidth
+                    drawLine(
+                        color = config.gridStyle.gridColor,
+                        start = Offset(x, bounds.top),
+                        end = Offset(x, y),
+                        strokeWidth = config.gridStyle.gridLineWidth,
+                        pathEffect = config.gridStyle.gridLineDashPathEffect
                     )
-                )
+                }
+            }
 
-                // 应用标签旋转
-                if (config.labelRotationAngle != 0f) {
-                    rotate(config.labelRotationAngle, pivot = Offset(x, y + 4f + textLayoutResult.size.height / 2)) {
+            // 绘制标签
+            if (config.isDrawLabelsEnabled) {
+                for (i in 0 until groupCount) {
+                    val value = xRangeMin + i
+                    // 标签居中在组内
+                    val x = bounds.left + i * groupWidth + groupWidth / 2
+
+                    val labelText = config.valueFormatter?.invoke(value) ?: value.toInt().toString()
+
+                    val textLayoutResult = textMeasurer.measure(
+                        text = labelText,
+                        style = TextStyle(
+                            fontSize = config.labelTextSize.sp,
+                            color = config.labelTextColor,
+                            fontFamily = config.labelFontFamily,
+                            fontWeight = config.labelFontWeight,
+                            fontStyle = config.labelFontStyle
+                        )
+                    )
+
+                    // 应用标签旋转
+                    if (config.labelRotationAngle != 0f) {
+                        rotate(config.labelRotationAngle, pivot = Offset(x, y + 4f + textLayoutResult.size.height / 2)) {
+                            drawText(
+                                textLayoutResult = textLayoutResult,
+                                topLeft = Offset(
+                                    x - textLayoutResult.size.width / 2,
+                                    y + 4f
+                                )
+                            )
+                        }
+                    } else {
                         drawText(
                             textLayoutResult = textLayoutResult,
                             topLeft = Offset(
@@ -109,14 +112,76 @@ fun XAxisView(
                             )
                         )
                     }
-                } else {
-                    drawText(
-                        textLayoutResult = textLayoutResult,
-                        topLeft = Offset(
-                            x - textLayoutResult.size.width / 2,
-                            y + 4f
+                }
+            }
+        } else {
+            // 连续模式：原有逻辑
+            var labelCount = config.labelCount
+            var step = range / (labelCount - 1)
+
+            // 确保步长不小于粒度
+            if (step < config.granularity && config.granularity > 0) {
+                step = config.granularity
+                labelCount = (range / step).toInt() + 1
+            }
+
+            // 绘制网格线
+            if (config.isDrawGridLinesEnabled && config.gridStyle.isDrawGridLinesEnabled) {
+                for (i in 0 until labelCount) {
+                    val value = xRangeMin + step * i
+                    if (value > xRangeMax) break
+                    val x = bounds.left + (value - xRangeMin) / range * chartWidth
+
+                    drawLine(
+                        color = config.gridStyle.gridColor,
+                        start = Offset(x, bounds.top),
+                        end = Offset(x, y),
+                        strokeWidth = config.gridStyle.gridLineWidth,
+                        pathEffect = config.gridStyle.gridLineDashPathEffect
+                    )
+                }
+            }
+
+            // 绘制标签（支持旋转）
+            if (config.isDrawLabelsEnabled) {
+                for (i in 0 until labelCount) {
+                    val value = xRangeMin + step * i
+                    if (value > xRangeMax) break
+                    val x = bounds.left + (value - xRangeMin) / range * chartWidth
+
+                    val labelText = config.valueFormatter?.invoke(value) ?: value.toInt().toString()
+
+                    val textLayoutResult = textMeasurer.measure(
+                        text = labelText,
+                        style = TextStyle(
+                            fontSize = config.labelTextSize.sp,
+                            color = config.labelTextColor,
+                            fontFamily = config.labelFontFamily,
+                            fontWeight = config.labelFontWeight,
+                            fontStyle = config.labelFontStyle
                         )
                     )
+
+                    // 应用标签旋转
+                    if (config.labelRotationAngle != 0f) {
+                        rotate(config.labelRotationAngle, pivot = Offset(x, y + 4f + textLayoutResult.size.height / 2)) {
+                            drawText(
+                                textLayoutResult = textLayoutResult,
+                                topLeft = Offset(
+                                    x - textLayoutResult.size.width / 2,
+                                    y + 4f
+                                )
+                            )
+                        }
+                    } else {
+                        drawText(
+                            textLayoutResult = textLayoutResult,
+                            topLeft = Offset(
+                                x - textLayoutResult.size.width / 2,
+                                y + 4f
+                            )
+                        )
+                    }
                 }
             }
         }

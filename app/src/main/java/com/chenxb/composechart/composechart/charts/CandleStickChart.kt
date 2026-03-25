@@ -140,14 +140,20 @@ fun CandleStickChart(
                 val xRange = if (dataRange.xMax != dataRange.xMin) dataRange.xMax - dataRange.xMin else 1f
                 val yRange = if (dataRange.yMax != dataRange.yMin) dataRange.yMax - dataRange.yMin else 1f
 
+                // 使用分组模式计算，与 centerLabels 一致
+                val groupCount = (dataRange.xMax - dataRange.xMin + 1).toInt()
+                val groupWidth = chartBounds.width / groupCount
+
                 for (dataSet in data.getDataSets()) {
                     val entries = dataSet.getEntries()
                     if (entries.isEmpty()) continue
 
-                    val candleWidth = chartBounds.width / entries.size * 0.7f
+                    val candleWidth = groupWidth * 0.7f
 
                     for (entry in entries) {
-                        val x = chartBounds.left + ((entry.x - dataRange.xMin) / xRange) * chartBounds.width
+                        // 分组模式：x 坐标居中在组内
+                        val groupIndex = entry.x.toInt() - dataRange.xMin.toInt()
+                        val x = chartBounds.left + groupIndex * groupWidth + groupWidth / 2
                         val highY = chartBounds.bottom - ((entry.high - dataRange.yMin) / yRange) * chartBounds.height
                         val lowY = chartBounds.bottom - ((entry.low - dataRange.yMin) / yRange) * chartBounds.height
                         val openY = chartBounds.bottom - ((entry.open - dataRange.yMin) / yRange) * chartBounds.height
@@ -286,7 +292,7 @@ fun CandleStickChart(
 
             // 绘制X轴
             XAxisView(
-                config = xAxisConfig,
+                config = xAxisConfig.copy(centerLabels = true),
                 bounds = b,
                 xRangeMin = data.getX最小值(),
                 xRangeMax = data.getX最大值(),

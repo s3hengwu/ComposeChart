@@ -101,7 +101,7 @@ fun BarChart(
 
     // 计算绘图区域
     val axisLeftWidth = 60f
-    val axisRightWidth = if (yAxisConfigRight != null) 60f else 20f
+    val axisRightWidth = if (yAxisConfigRight != null) 60f else 40f
     val axisTopHeight = 30f
     val xAxisHeight = 40f
     // 底部高度 = X轴高度 + Legend真实高度（如果启用）
@@ -159,14 +159,16 @@ fun BarChart(
                 emptyList()
             } else {
                 val result = mutableListOf<CachedBarInfo>()
-                var currentGroupIndex = 0
+                // 计算组内柱子的偏移量，使柱子居中
+                val groupOffset = (layout.groupWidth - layout.dataSetCount * layout.barItemWidth) / 2
 
                 for ((dataSetIndex, dataSet) in data.getDataSets().withIndex()) {
                     val entries = dataSet.getEntries()
                     for ((entryIndex, entry) in entries.withIndex()) {
-                        val x = chartBounds.left + currentGroupIndex * layout.groupWidth +
-                                entryIndex * layout.barItemWidth * layout.dataSetCount +
-                                dataSetIndex * layout.barItemWidth
+                        // 使用 entry.x 作为组索引，这样同一 x 值的不同数据集柱子会并排显示
+                        val groupIndex = entry.x.toInt() - dataRange.xMin.toInt()
+                        val x = chartBounds.left + groupIndex * layout.groupWidth +
+                                groupOffset + dataSetIndex * layout.barItemWidth
 
                         // 检查是否是堆叠柱状图
                         if (entry.yStack != null && entry.yStack.isNotEmpty()) {
@@ -203,7 +205,6 @@ fun BarChart(
                                 )
                             )
                         }
-                        currentGroupIndex++
                     }
                 }
                 result
@@ -341,7 +342,7 @@ fun BarChart(
 
             // 绘制X轴
             XAxisView(
-                config = xAxisConfig,
+                config = xAxisConfig.copy(centerLabels = true),
                 bounds = b,
                 xRangeMin = data.getX最小值(),
                 xRangeMax = data.getX最大值(),
